@@ -90,19 +90,11 @@ int main(){
     }
     // print them
     pcap_if_t *d; int i;
-    for(d=alldevs,i=0; d!=NULL; d=d->next){
-            //printf("%d-th dev: %s ", ++i, d->name);
-            if (d->description){
-                //printf(" (%s)\n", d->description);
-            }
-            else{
-                printf(" (No description available)\n");
-            }
-    }
+    
 
     int inum;
 
-    printf("--eth0 interface-- \n");
+    printf("\n --eth0 interface-- \n");
     inum = 1;
     for(d=alldevs, i=0; i<inum-1; d=d->next, i++);
  
