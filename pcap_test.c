@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <time.h>
 #pragma comment (lib, "wpcap.lib")
 #pragma comment (lib, "ws2_32.lib" )
  
@@ -69,34 +70,40 @@ int print_tcp_header(const unsigned char *data);
 void print_data(const unsigned char *data);
  
 int main(){
-        pcap_if_t *alldevs=NULL;
-        char errbuf[PCAP_ERRBUF_SIZE];
- 
-        int offset=0;
-       
-        // find all network adapters
-        if (pcap_findalldevs(&alldevs, errbuf)==-1){
-                printf("dev find failed\n");
-                return -1;
-        }
-        if (alldevs==NULL){
-                printf("no devs found\n");
-                return -1;
-        }
-        // print them
-        pcap_if_t *d; int i;
-        for(d=alldevs,i=0; d!=NULL; d=d->next){
-                printf("%d-th dev: %s ", ++i, d->name);
-                if (d->description)
-                        printf(" (%s)\n", d->description);
-                else
-                        printf(" (No description available)\n");
-        }
- 
-        int inum;
- 
-        printf("enter the interface number: ");
-    scanf("%d", &inum);
+
+	char track[] = "Forensics";
+	char name[] = "SeoKangYoun";
+	printf("[bob6][%s]pcap_test[%s]", track, name);
+    pcap_if_t *alldevs=NULL;
+    char errbuf[PCAP_ERRBUF_SIZE];
+
+    int offset=0;
+   
+    // find all network adapters
+    if (pcap_findalldevs(&alldevs, errbuf)==-1){
+            printf("dev find failed\n");
+            return -1;
+    }
+    if (alldevs==NULL){
+            printf("no devs found\n");
+            return -1;
+    }
+    // print them
+    pcap_if_t *d; int i;
+    for(d=alldevs,i=0; d!=NULL; d=d->next){
+            //printf("%d-th dev: %s ", ++i, d->name);
+            if (d->description){
+                //printf(" (%s)\n", d->description);
+            }
+            else{
+                printf(" (No description available)\n");
+            }
+    }
+
+    int inum;
+
+    printf("--eth0 interface-- \n");
+    inum = 1;
     for(d=alldevs, i=0; i<inum-1; d=d->next, i++);
  
     pcap_t  *fp;
@@ -129,27 +136,31 @@ int main(){
         return -1;
     }
  
-        pcap_freealldevs(alldevs); // we don't need this anymore
- 
-        struct pcap_pkthdr *header;
-       
-        const unsigned char *pkt_data;
-        int res;
-       
-                while((res=pcap_next_ex(fp, &header,&pkt_data))>=0){
-                        if (res==0) continue;
- 
-                print_ether_header(pkt_data);
-                pkt_data = pkt_data + 14;       // raw_pkt_data의 14번지까지 이더넷
-                offset = print_ip_header(pkt_data);
-                pkt_data = pkt_data + offset;           // ip_header의 길이만큼 오프셋
-                offset = print_tcp_header(pkt_data);
-                pkt_data = pkt_data + offset;           //print_tcp_header *4 데이터 위치로 오프셋
-                print_data(pkt_data);
-                }
- 
- 
-        return 0;
+    pcap_freealldevs(alldevs); // we don't need this anymore
+
+    struct pcap_pkthdr *header;
+   
+    const unsigned char *pkt_data;
+    int res;
+    time_t timer_s = 0;
+    time_t timer_e = 0; 
+	timer_s = clock();
+
+    while((res=pcap_next_ex(fp, &header,&pkt_data))>=0 && (timer_e - timer_s < 10000 )){
+        if (res==0) continue;
+	    print_ether_header(pkt_data);
+    	pkt_data = pkt_data + 14;       // raw_pkt_data의 14번지까지 이더넷
+    	offset = print_ip_header(pkt_data);
+    	pkt_data = pkt_data + offset;           // ip_header의 길이만큼 오프셋
+    	offset = print_tcp_header(pkt_data);
+    	pkt_data = pkt_data + offset;           //print_tcp_header *4 데이터 위치로 오프셋
+    	print_data(pkt_data);
+    	timer_e = clock();
+    }
+
+    printf("pcap end!!\n");
+
+    return 0;
  
 }
  
