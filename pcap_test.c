@@ -11,20 +11,17 @@
  
 #define FILTER_RULE "tcp port 80"
  
-struct ether_addr
-{
+struct ether_addr{
     unsigned char ether_addr_octet[6];
 };
  
-struct ether_header
-{
+struct ether_header{
     struct  ether_addr ether_dhost;
     struct  ether_addr ether_shost;
     unsigned short ether_type;
 };
  
-struct ip_header
-{
+struct ip_header{
     unsigned char ip_header_len:4;
     unsigned char ip_version:4;
     unsigned char ip_tos;
@@ -42,8 +39,7 @@ struct ip_header
     struct in_addr ip_destaddr;
 };
  
-struct tcp_header
-{
+struct tcp_header{
     unsigned short source_port;
     unsigned short dest_port;
     unsigned int sequence;
@@ -82,10 +78,6 @@ int main(int argc, char* argv[]){
         return 0;
     }
 
-    bpf_u_int32 net;
-
-
-
 	pcap_if_t *alldevs=NULL;
     char errbuf[PCAP_ERRBUF_SIZE];
 
@@ -116,18 +108,30 @@ int main(int argc, char* argv[]){
  
     printf("pcap open successful\n");
  
-        struct bpf_program  fcode;
+    struct bpf_program  fcode;
+    /*
+    bpf_u_int32 net;
+    bpf_u_int32 mask;
+
+    if( !(dev = pcap_lookupdev(errbuf))){
+        printf("ERROR\n");
+    }
+    if (pcap_lookupnet(dev, &net, &mask, errbuf)){
+        printf("ERROR\n");
+    }
+    
     if (pcap_compile(fp, &fcode, FILTER_RULE, 1, NULL) < 0){
         printf("pcap compile failed\n");
         pcap_freealldevs(alldevs);
         return -1;
     }
+
     if (pcap_setfilter(fp, &fcode) <0 ){
         printf("pcap compile failed\n");
         pcap_freealldevs(alldevs);
         return -1;
     }
- 
+    */
     pcap_freealldevs(alldevs); 
 
     struct pcap_pkthdr *header;
@@ -189,17 +193,16 @@ void print_ether_header(const unsigned char *data)
 int print_ip_header(const unsigned char *data){
     struct  ip_header *ih;         
     ih = (struct ip_header *)data;
-
+    char test_str[INET_ADDRSTRLEN];
     printf("\n============IP HEADER============\n");
     printf("IPv%d ver \n", ih->ip_version);
     printf("Packet Length : %d\n", ntohs(ih->ip_total_length)+14);
     printf("TTL : %d\n", ih->ip_ttl);
-    if(ih->ip_protocol == 0x06)
-    {
-            printf("Protocol : TCP\n");
+    if(ih->ip_protocol == 0x06){
+        printf("Protocol : TCP\n");
     }
-    printf("Src IP Addr : %s\n", inet_ntoa(ih->ip_srcaddr) );
-    printf("Dst IP Addr : %s\n", inet_ntoa(ih->ip_destaddr) );
+    printf("Src IP Addr : %s\n", inet_ntop(AF_INET, &(ih->ip_srcaddr), test_str, INET_ADDRSTRLEN) );
+    printf("Dst IP Addr : %s\n", inet_ntop(AF_INET, &(ih->ip_destaddr), test_str, INET_ADDRSTRLEN) );
    
     // return to ip header size
     return ih->ip_header_len*4;
